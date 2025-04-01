@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        #canvas {
+            border: 3px solid #333;
+            background-color: white;
+            cursor: crosshair;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #submitBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        #submitBtn:hover {
+            background-color: #45a049;
+        }
+        #thankYouMessage {
+            display: none;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #4CAF50;
+            text-align: center;
+        }
+        .container {
+            text-align: center;
+        }
+
+        /* Make canvas and button responsive for mobile */
+        @media (max-width: 600px) {
+            #canvas {
+                width: 90%;
+                height: auto;
+            }
+            #submitBtn {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="heading">Draw on the Whiteboard</h1>
+        <canvas id="canvas" width="500" height="500"></canvas>
+        <br />
+        <button id="submitBtn">Submit Drawing</button>
+        <div id="thankYouMessage">Thank you for your submission! You can close the page now.</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const submitBtn = document.getElementById("submitBtn");
+        const thankYouMessage = document.getElementById("thankYouMessage");
+        const heading = document.getElementById("heading");
+
+        let drawing = false;
+
+        // Start drawing when mouse or touch is pressed
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("touchstart", startDrawing);
+
+        function startDrawing(e) {
+            e.preventDefault(); // Prevents the default action (like scrolling)
+            drawing = true;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        // Stop drawing when mouse is released or touch ends
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("touchend", stopDrawing);
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        // Draw on canvas as mouse or touch moves
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("touchmove", draw);
+
+        function draw(e) {
+            if (drawing) {
+                e.preventDefault(); // Prevents the default action (like scrolling)
+                const coords = getCoordinates(e);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.lineCap = "round";
+                ctx.stroke();
+            }
+        }
+
+        // Function to get the coordinates (for mouse and touch events)
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();  // Get the position of the canvas on the screen
+            let x = e.clientX ? e.clientX : e.touches[0].clientX;  // Get X coordinates
+            let y = e.clientY ? e.clientY : e.touches[0].clientY;  // Get Y coordinates
+
+            // Adjust X and Y coordinates relative to the canvas position
+            const scaleX = canvas.width / rect.width;  // Scale factor for width
+            const scaleY = canvas.height / rect.height;  // Scale factor for height
+
+            // Calculate the precise position based on canvas bounds
+            x = (x - rect.left) * scaleX;  // Adjust X with the scale factor
+            y = (y - rect.top) * scaleY;   // Adjust Y with the scale factor
+
+            return { x, y };
+        }
+
+        // Submit drawing when button is clicked
+        submitBtn.addEventListener("click", () => {
+            const dataUrl = canvas.toDataURL("image/png");
+
+            // Send the image data to the backend (server)
+            fetch("/submitDrawing", {
+                method: "POST",
+                body: JSON.stringify({ drawing: dataUrl }),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Show "Thank You" message, hide canvas and submit button
+                thankYouMessage.style.display = 'block';
+                heading.style.display = 'none';  // Hide the heading after submission
+                canvas.style.display = 'none';   // Hide the canvas
+                submitBtn.style.display = 'none'; // Hide the submit button
+            })
+            .catch(err => {
+                alert("Error submitting drawing.");
+            });
+        });
+    </script>
+</body>
+</html>
