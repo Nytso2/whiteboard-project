@@ -13,7 +13,7 @@ app.use(express.static('public'));  // Serve static files like index.html
 
 // Use basic authentication for the /admin route
 app.use('/admin', basicAuth({
-    users: { 'admin': 'artclass111' }, // Replace with your chosen username and password
+    users: { 'username': 'password' }, // Replace with your chosen username and password
     challenge: true, // Ask for authentication
     realm: 'Admin Area'
 }));
