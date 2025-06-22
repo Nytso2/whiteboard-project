@@ -16,6 +16,7 @@ node server.js
 ```
 
 ## Open http://localhost:3000 to draw
+
 ## Admin panel at http://localhost:3000/admin (username: username, password: password)
 
 ## What it does
@@ -27,5 +28,5 @@ node server.js
 
 
 ## Security Note
-⚠️ Change the default admin credentials in server.js before using!
+- Change the default admin credentials in server.js before using!
 
